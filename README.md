@@ -4,6 +4,7 @@
 
 This repository provides an advanced implementation of authentication and authorization in a .NET 8 application. Proper authentication and authorization are crucial aspects of securing your application, and this project serves as a guide for implementing robust security measures.
 
+## Features
 - **Identity**: Integrated Identity for user management and authentication.
 - **JWT (JSON Web Tokens)**: Secure user authentication using JWT for token-based authorization.
 - **Two-Factor Authentication (2FA)**: Additional layer of security with 2FA using methods such as SMS or email.
