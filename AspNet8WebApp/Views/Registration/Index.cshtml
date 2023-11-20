@@ -1,0 +1,76 @@
+﻿@model RegistrationViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<h3>User Registration</h3>
+<br />
+
+<form method="post">
+@*     @Html.AntiForgeryToken()
+ *@
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Email">Email Address</label>
+
+        </div>
+        <div class="col-5">
+            <input asp-for="Email" class="form-control" placeholder="Email Address">
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Username">Username</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Username" class="form-control" placeholder="Username">
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Password">Password</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Password" class="form-control" placeholder="Password">
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="PhoneNumber">Phone Number</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="PhoneNumber" class="form-control" placeholder="PhoneNumber">
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Password">Department</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Department" class="form-control" placeholder="Department">
+            <span asp-validation-for="Department" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Password">Position</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Position" class="form-control" placeholder="Position">
+            <span asp-validation-for="Position" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <button class="btn btn-primary py-2" type="submit">Register</button>
+            @Html.ValidationSummary("", new { @class = "text-danger" })
+        </div>
+
+    </div>
+</form>

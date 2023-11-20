@@ -1,0 +1,53 @@
+﻿@model UserProfile
+<h3>User Profile</h3>
+<br />
+
+<form method="post">
+    @*     @Html.AntiForgeryToken()
+    *@
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Email">Email Address</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Email" class="form-control" placeholder="Email Address" readonly>
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Password">Department</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Department" class="form-control" placeholder="Department">
+            <span asp-validation-for="Department" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="Password">Position</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="Position" class="form-control" placeholder="Position">
+            <span asp-validation-for="Position" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="form-check text-start my-3">
+        <input class="form-check-input" type="checkbox" asp-for="TwoFactorAuthenticator">
+        <label class="form-check-label" asp-for="TwoFactorAuthenticator">
+            Two Factor Authenticator
+        </label>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <button class="btn btn-primary py-2" type="submit">Save Profile</button>
+            @Html.ValidationSummary("", new { @class = "text-danger" })
+
+            @if (ViewBag.messsage != null)
+            {
+                <div class="alert alert-success" role="alert">@ViewBag.messsage</div>
+            }
+        </div>
+
+    </div>
+</form>

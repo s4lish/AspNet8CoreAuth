@@ -1,0 +1,17 @@
+﻿<div class="me-2">
+    @if (User != null && User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <span>
+            Welcome @User.Identity.Name @(User.Claims.FirstOrDefault(x=>x.Type == "Position"))
+
+            <a class="btn btn-link" asp-area="" asp-controller="User" asp-action="Profile">Profile</a>
+            <a class="btn btn-link" asp-area="" asp-controller="Home" asp-action="Logout">Logout</a>
+        </span>
+
+    }
+    else
+    {
+        <a class="btn btn-link" asp-area="" asp-controller="Registration" asp-action="Index">Registr</a>
+        <a class="btn btn-link" asp-area="" asp-controller="Login" asp-action="Index">Login</a>
+    }
+</div>
