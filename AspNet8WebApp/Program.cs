@@ -47,7 +47,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
 }
 app.UseStaticFiles();
-//app.UseAntiforgery();
+app.UseAntiforgery();
 app.UseRouting();
 
 app.UseAuthentication();
