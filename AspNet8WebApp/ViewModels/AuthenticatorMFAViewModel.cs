@@ -2,7 +2,7 @@
 
 namespace AspNet8WebApp.ViewModels
 {
-    public class Check2FACode
+    public class AuthenticatorMFAViewModel
     {
         [Required]
         [Display(Name = "Security Code")]

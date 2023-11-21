@@ -28,7 +28,7 @@ namespace AspNet8WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(Credential credential)
+        public async Task<IActionResult> Index(CredentialViewModel credential)
         {
             if (!ModelState.IsValid) return View();
 
@@ -46,12 +46,22 @@ namespace AspNet8WebApp.Controllers
                 if (result.RequiresTwoFactor)
                 {
                     var user = await userManager.FindByNameAsync(credential.Username);
-                    var securityCode = await userManager.GenerateTwoFactorTokenAsync(user, "Email");
-
-                    var text = $"<h3>Two Factor Authentication code is</h3><h5>{securityCode}</h5>";
-                    emailService.SendEmailAsync(user.Email, "Two Factor Authentication Code", text);
-
-                    return RedirectToAction("Check2FactorCode", "Login", new { rmme = credential.RememberMe });
+                    if (user.Twofactortypes == Enums.Twofactortypes.email)
+                    {
+                        return RedirectToAction("Check2FactorCode", "Login", new { rmme = credential.RememberMe, us = credential.Username });
+                    }
+                    else if (user.Twofactortypes == Enums.Twofactortypes.sms)
+                    {
+                        ModelState.AddModelError("Login", "SMS 2FA no support yet.");
+                    }
+                    else if (user.Twofactortypes == Enums.Twofactortypes.authenticator)
+                    {
+                        return RedirectToAction("Check2FactorAuthenticator", "Login", new { rmme = credential.RememberMe });
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Login", "unknow two factor type.");
+                    }
                 }
 
                 if (result.IsLockedOut)
@@ -67,9 +77,17 @@ namespace AspNet8WebApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Check2FactorCode(bool rmme)
+        public async Task<IActionResult> Check2FactorCode(bool rmme, string us)
         {
-            Check2FACode check2FACode = new Check2FACode
+
+            var user = await userManager.FindByNameAsync(us);
+            var securityCode = await userManager.GenerateTwoFactorTokenAsync(user, "Email");
+
+            var text = $"<h2>Two Factor Authentication code is</h3><p style=\"font-size:20px;\">{securityCode}</p>";
+            emailService.SendEmailAsync(user.Email, "Two Factor Authentication Code", text);
+
+
+            EmailMFAViewModel check2FACode = new EmailMFAViewModel
             {
                 RememberMe = rmme
             };
@@ -79,7 +97,7 @@ namespace AspNet8WebApp.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Check2FactorCode(Check2FACode check2FACode)
+        public async Task<IActionResult> Check2FactorCode(EmailMFAViewModel check2FACode)
         {
             if (!ModelState.IsValid) return View(check2FACode);
 
@@ -103,6 +121,43 @@ namespace AspNet8WebApp.Controllers
             }
 
             return View(check2FACode);
+        }
+
+        [HttpGet]
+        public IActionResult Check2FactorAuthenticator(bool rmme)
+        {
+            AuthenticatorMFAViewModel check2FACode = new AuthenticatorMFAViewModel
+            {
+                RememberMe = rmme
+            };
+
+            return View(check2FACode);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Check2FactorAuthenticator(AuthenticatorMFAViewModel authenticatorMFAViewModel)
+        {
+            if (!ModelState.IsValid) return View(authenticatorMFAViewModel);
+
+            var result = await signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorMFAViewModel.Code, authenticatorMFAViewModel.RememberMe, false);
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            else
+            {
+                if (result.IsLockedOut)
+                {
+                    ModelState.AddModelError("Check2FactorAuthenticator", "You are Locked out.");
+                }
+                else
+                {
+                    ModelState.AddModelError("Check2FactorAuthenticator", "Failed To Login.");
+                }
+            }
+
+            return View(authenticatorMFAViewModel);
         }
 
     }

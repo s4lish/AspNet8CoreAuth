@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using AspNet8WebApp.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace AspNet8WebApp.ViewModels
 {
-    public class UserProfile
+    public class UserProfileViewModel
     {
         public string Email { get; set; } = string.Empty;
         [Required]
@@ -11,6 +12,8 @@ namespace AspNet8WebApp.ViewModels
         public string Position { get; set; } = string.Empty;
 
         public bool TwoFactorAuthenticator { get; set; } = false;
+
+        public Twofactortypes Twofactortypes { get; set; }
 
     }
 }

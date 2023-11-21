@@ -3,6 +3,7 @@ using AspNet8WebApp.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using QRCoder;
 using System.Net;
 using System.Security.Claims;
 
@@ -17,77 +18,6 @@ namespace AspNet8WebApp.Controllers
         {
             this.userManager = userManager;
         }
-        // GET: UserController
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        // GET: UserController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: UserController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: UserController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(RegistrationViewModel registrationView)
-        {
-
-
-
-            return View();
-        }
-
-        // GET: UserController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: UserController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: UserController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: UserController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
 
         [HttpGet]
         public async Task<IActionResult> Profile()
@@ -97,12 +27,13 @@ namespace AspNet8WebApp.Controllers
 
             if (claims.user != null)
             {
-                UserProfile userProfile = new UserProfile()
+                UserProfileViewModel userProfile = new UserProfileViewModel()
                 {
                     Department = claims.departmentClaim?.Value ?? "",
                     Position = claims.PositionClaim?.Value ?? "",
                     Email = claims.user?.Email ?? "",
                     TwoFactorAuthenticator = claims.user?.TwoFactorEnabled ?? false,
+                    Twofactortypes = claims.user?.Twofactortypes ?? Enums.Twofactortypes.email
                 };
 
                 return View(userProfile);
@@ -113,7 +44,7 @@ namespace AspNet8WebApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Profile(UserProfile userProfile)
+        public async Task<IActionResult> Profile(UserProfileViewModel userProfile)
         {
             if (!ModelState.IsValid)
             {
@@ -130,13 +61,26 @@ namespace AspNet8WebApp.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-
-                claims.user.TwoFactorEnabled = userProfile.TwoFactorAuthenticator;
-
                 if (claims.user != null && claims.departmentClaim != null)
                     await userManager.ReplaceClaimAsync(claims.user, claims.departmentClaim, new Claim(claims.departmentClaim.Type, userProfile.Department));
                 if (claims.user != null && claims.PositionClaim != null)
                     await userManager.ReplaceClaimAsync(claims.user, claims.PositionClaim, new Claim(claims.PositionClaim.Type, userProfile.Position));
+
+                if (userProfile.TwoFactorAuthenticator)
+                {
+                    if (claims.user.Twofactortypes != userProfile.Twofactortypes && userProfile.Twofactortypes == Enums.Twofactortypes.authenticator)
+                    {
+                        return RedirectToAction("AuthenticatorWithMFASetup", "User");
+                    }
+
+                    claims.user.Twofactortypes = userProfile.Twofactortypes;
+                }
+                else
+                {
+                    claims.user.Twofactortypes = null;
+                }
+
+                claims.user.TwoFactorEnabled = userProfile.TwoFactorAuthenticator;
 
 
                 await userManager.UpdateAsync(claims.user);
@@ -154,6 +98,57 @@ namespace AspNet8WebApp.Controllers
             return View(userProfile);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> AuthenticatorWithMFASetup()
+        {
+            var user = await userManager.GetUserAsync(User);
+            string? key = null;
+            if (user != null)
+            {
+                await userManager.ResetAuthenticatorKeyAsync(user);
+                key = await userManager.GetAuthenticatorKeyAsync(user);
+            }
+
+            return View(new SetupMFAViewModel
+            {
+                key = key ?? string.Empty,
+                QRCodeBytes = GenerateQRCodeBytes("AspNet8", key ?? "", user?.Email ?? "")
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AuthenticatorWithMFASetup(SetupMFAViewModel setupMFAViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return View();
+            }
+
+            var user = await userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var result = await userManager.VerifyTwoFactorTokenAsync(user, userManager.Options.Tokens.AuthenticatorTokenProvider, setupMFAViewModel.GeneratedCode);
+                if (result)
+                {
+                    user.Twofactortypes = Enums.Twofactortypes.authenticator;
+                    await userManager.UpdateAsync(user);
+                    await userManager.SetTwoFactorEnabledAsync(user, true);
+                    ViewBag.messsage = "authenticator setup successfully activated";
+                }
+                else
+                {
+                    ModelState.AddModelError("AuthenticatorWithMFASetup", "Something went wrong with the authenticator setup");
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("AuthenticatorWithMFASetup", "User not found");
+            }
+
+
+            return View(setupMFAViewModel);
+        }
 
         private async Task<(User? user, Claim? departmentClaim, Claim? PositionClaim)> GetUserInfoAsync()
         {
@@ -169,6 +164,17 @@ namespace AspNet8WebApp.Controllers
             }
 
             return (null, null, null);
+        }
+
+        private Byte[] GenerateQRCodeBytes(string provider, string key, string userEmail)
+        {
+            var qrcodeGenerator = new QRCodeGenerator();
+            var otpauth = $"otpauth://totp/{provider}:{userEmail}?secret={key}&issuer={provider}";
+            var qrcodeData = qrcodeGenerator.CreateQrCode(otpauth, QRCodeGenerator.ECCLevel.Q);
+
+            var qrCode = new PngByteQRCode(qrcodeData);
+
+            return qrCode.GetGraphic(20);
         }
     }
 }
