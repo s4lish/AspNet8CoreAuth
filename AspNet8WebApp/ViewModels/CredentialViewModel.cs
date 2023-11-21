@@ -2,7 +2,7 @@
 
 namespace AspNet8WebApp.ViewModels
 {
-    public class Credential
+    public class CredentialViewModel
     {
         [Required]
         [Display(Description = "Username")]

@@ -1,0 +1,46 @@
+﻿@model SetupMFAViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<h3>Step 1:</h3>
+<p>Please Enter the key to your authenticator app:</p>
+<p>@Model.key</p>
+<p>Or scan the QrCode:</p>
+<p>
+    @if(Model.QRCodeBytes != null)
+    {
+        <img src="@string.Format("data:image/png;base64,{0}",Convert.ToBase64String(Model.QRCodeBytes))" width="200" height="200" />
+    }
+</p>
+<br />
+<h3>Step 2:</h3>
+<p>Please Enter Enter the Code from your authenticator app::</p>
+
+<form method="post">
+    <div class="mb-3 row">
+        <div class="col-2">
+            <label for="GeneratedCode">Code</label>
+        </div>
+        <div class="col-5">
+            <input asp-for="GeneratedCode" class="form-control" placeholder="Generated Code">
+            <span asp-validation-for="GeneratedCode" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <button class="btn btn-primary py-2" type="submit">Save Profile</button>
+            @Html.ValidationSummary("", new { @class = "text-danger" })
+            <input asp-for="key" type="hidden" />
+            <input asp-for="QRCodeBytes" type="hidden" />
+
+            @if (ViewBag.messsage != null)
+            {
+                <div class="alert alert-success" role="alert">@ViewBag.messsage</div>
+            }
+        </div>
+
+    </div>
+</form>
+

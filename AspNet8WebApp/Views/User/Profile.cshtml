@@ -1,4 +1,4 @@
-﻿@model UserProfile
+﻿@model UserProfileViewModel
 <h3>User Profile</h3>
 <br />
 
@@ -38,6 +38,39 @@
             Two Factor Authenticator
         </label>
     </div>
+    @if (Model.TwoFactorAuthenticator)
+    {
+        <div class="form-check">
+            <input class="form-check-input" asp-for="Twofactortypes" value="@Twofactortypes.email" type="radio" id="flexRadioDefault1" checked>
+            <label class="form-check-label" for="flexRadioDefault1">
+                Send Code By Email
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" asp-for="Twofactortypes" value="@Twofactortypes.sms" type="radio" id="flexRadioDefault2" disabled>
+            <label class="form-check-label" for="flexRadioDefault2">
+                Send Code By SMS
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" asp-for="Twofactortypes" value="@Twofactortypes.authenticator" type="radio" id="flexRadioDefault3">
+            <label class="form-check-label" for="flexRadioDefault3">
+                Use Authenticator App
+            </label>
+        </div>
+        @if (Model.Twofactortypes == Twofactortypes.authenticator)
+        {
+            <div class="mb-3 row">
+                <div class="col-2">
+                    <label for="Password">Setup Authenticator</label>
+                </div>
+                <div class="col-5">
+                    <a class="btn btn-info" href="@Url.Action("AuthenticatorWithMFASetup","User")">Setup Auth App</a>
+                </div>
+            </div>
+        }
+    }
+
     <div class="row">
         <div class="col-12">
             <button class="btn btn-primary py-2" type="submit">Save Profile</button>
