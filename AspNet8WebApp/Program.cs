@@ -1,5 +1,6 @@
 using AspNet8WebApp.Data;
 using AspNet8WebApp.Data.Account;
+using AspNet8WebApp.Middleware;
 using AspNet8WebApp.Services.EmailService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ builder.Services.AddIdentity<User, IdentityRole>(opt =>
 }).AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders(); // how to generate token
 
+builder.Services.AddAntiforgery(opt => opt.HeaderName = "X-CSRF-TOKEN");
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
@@ -41,6 +43,7 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -52,6 +55,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCheckTokenMiddleware();
 
 app.MapControllerRoute(
     name: "default",

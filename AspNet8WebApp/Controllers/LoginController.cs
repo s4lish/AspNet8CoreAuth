@@ -1,4 +1,5 @@
-﻿using AspNet8WebApp.Data.Account;
+﻿using AspNet8WebApp.Data;
+using AspNet8WebApp.Data.Account;
 using AspNet8WebApp.Services.EmailService;
 using AspNet8WebApp.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -13,12 +14,14 @@ namespace AspNet8WebApp.Controllers
         private readonly SignInManager<User> signInManager;
         private readonly UserManager<User> userManager;
         private readonly IEmailService emailService;
+        private readonly ApplicationDbContext applicationDbContext;
 
-        public LoginController(SignInManager<User> signInManager, UserManager<User> userManager, IEmailService emailService)
+        public LoginController(SignInManager<User> signInManager, UserManager<User> userManager, IEmailService emailService, ApplicationDbContext applicationDbContext)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
             this.emailService = emailService;
+            this.applicationDbContext = applicationDbContext;
         }
         public IActionResult Index()
         {
@@ -38,6 +41,20 @@ namespace AspNet8WebApp.Controllers
 
             if (result.Succeeded)
             {
+                Guid secretKey = Guid.NewGuid();
+                applicationDbContext.SecretKey.Add(new SecretKey
+                {
+                    Key = secretKey,
+                    Username = credential.Username
+                });
+
+                await applicationDbContext.SaveChangesAsync();
+                HttpContext.Response.Cookies.Append("secretkey", secretKey.ToString(), new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTimeOffset.UtcNow.AddYears(10)
+                });
+
                 return RedirectToAction("Index", "Home");
             }
             else
@@ -106,6 +123,21 @@ namespace AspNet8WebApp.Controllers
 
             if (result.Succeeded)
             {
+                Guid secretKey = Guid.NewGuid();
+                applicationDbContext.SecretKey.Add(new SecretKey
+                {
+                    Key = secretKey,
+                    Username = User.Identity.Name
+                });
+
+                await applicationDbContext.SaveChangesAsync();
+                HttpContext.Response.Cookies.Append("secretkey", secretKey.ToString(), new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTimeOffset.UtcNow.AddYears(10)
+                });
+
+
                 return RedirectToAction("Index", "Home");
             }
             else
@@ -143,6 +175,20 @@ namespace AspNet8WebApp.Controllers
 
             if (result.Succeeded)
             {
+                Guid secretKey = Guid.NewGuid();
+                applicationDbContext.SecretKey.Add(new SecretKey
+                {
+                    Key = secretKey,
+                    Username = User.Identity.Name
+                });
+
+                await applicationDbContext.SaveChangesAsync();
+                HttpContext.Response.Cookies.Append("secretkey", secretKey.ToString(), new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTimeOffset.UtcNow.AddYears(10)
+                });
+
                 return RedirectToAction("Index", "Home");
             }
             else

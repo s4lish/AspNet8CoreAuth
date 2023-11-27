@@ -10,5 +10,7 @@ namespace AspNet8WebApp.Data
         {
 
         }
+
+        public DbSet<SecretKey> SecretKey { get; set; }
     }
 }
